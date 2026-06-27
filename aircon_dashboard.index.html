@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Live Dashboard — Air Con Repair PH</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F1EFE8;color:#2C2C2A;min-height:100vh;}
+  .topbar{background:#185FA5;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar-title{font-size:16px;font-weight:600;letter-spacing:0.2px;}
+  .topbar-sub{font-size:12px;opacity:0.8;margin-top:2px;}
+  .pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:#5DCAA5;margin-right:6px;animation:pulse 1.5s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  .refresh-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit;}
+  .refresh-btn:hover{background:rgba(255,255,255,0.25);}
+  .container{max-width:1100px;margin:0 auto;padding:20px 20px 40px;}
+  .card{background:#fff;border:0.5px solid #D3D1C7;border-radius:12px;padding:16px 20px;}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+  .grid-2{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-bottom:14px;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+  .stat-label{font-size:12px;color:#888780;margin-bottom:4px;}
+  .stat-val{font-size:28px;font-weight:600;color:#2C2C2A;}
+  .stat-sub{font-size:11px;color:#888780;margin-top:4px;}
+  .section-title{font-size:13px;font-weight:600;color:#2C2C2A;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+  .badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;}
+  .badge-hot{background:#FAECE7;color:#712B13;}
+  .badge-warm{background:#FAEEDA;color:#633806;}
+  .badge-cold{background:#E6F1FB;color:#0C447C;}
+  .badge-ok{background:#E1F5EE;color:#085041;}
+  .badge-flag{background:#FAEEDA;color:#633806;}
+  .row-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:0.5px solid #D3D1C7;font-size:13px;}
+  .row-item:last-child{border-bottom:none;}
+  .bar-bg{background:#F1EFE8;border-radius:4px;height:8px;margin-top:4px;overflow:hidden;}
+  .bar-fill{height:8px;border-radius:4px;transition:width 0.6s ease;}
+  .icon{width:18px;height:18px;display:inline-block;vertical-align:-3px;margin-right:6px;opacity:0.5;}
+  .stat-green{color:#1D9E75;}
+  .stat-blue{color:#185FA5;}
+  .stat-purple{color:#534AB7;}
+  .flag-reason{font-size:11px;color:#854F0B;margin-top:2px;}
+  .reply-btn{background:#fff;border:0.5px solid #D3D1C7;color:#2C2C2A;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap;margin-left:10px;}
+  .reply-btn:hover{background:#F1EFE8;}
+  .footer{text-align:center;font-size:11px;color:#B4B2A9;margin-top:8px;padding-bottom:8px;}
+  .connect-note{background:#E6F1FB;border:0.5px solid #B5D4F4;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#0C447C;display:flex;align-items:flex-start;gap:10px;}
+  .connect-note strong{font-weight:600;}
+  @media(max-width:700px){
+    .grid-4{grid-template-columns:repeat(2,1fr);}
+    .grid-2{grid-template-columns:1fr;}
+    .grid-3{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Air Con Repair PH — Lead Dashboard</div>
+    <div class="topbar-sub"><span class="pulse"></span>Live · Auto-refreshes every 60 seconds · <span id="last-update">Loading...</span></div>
+  </div>
+  <button class="refresh-btn" onclick="refreshDash()">&#8635; Refresh now</button>
+</div>
+
+<div class="container">
+
+  <div class="connect-note">
+    <div>&#9432;</div>
+    <div>
+      <strong>Sample dashboard</strong> — currently showing demo data.
+      To connect your real Google Sheet, replace the <code>getData()</code> function with your Google Sheets API call.
+      <a href="#" onclick="alert('Ask Claude: How do I connect this dashboard to my Google Sheet?');return false;" style="color:#185FA5;margin-left:4px;">Setup guide &rarr;</a>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="grid-4">
+    <div class="card">
+      <div class="stat-label">Inquiries today</div>
+      <div class="stat-val" id="stat-today">--</div>
+      <div class="stat-sub" id="stat-today-sub">loading...</div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Auto-replied by Claude</div>
+      <div class="stat-val stat-blue" id="stat-auto">--</div>
+      <div class="stat-sub" id="stat-auto-sub">loading...</div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Flagged for review</div>
+      <div class="stat-val" style="color:#854F0B;" id="stat-flag">--</div>
+      <div class="stat-sub" id="stat-flag-sub">loading...</div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Hot leads today</div>
+      <div class="stat-val" style="color:#D85A30;" id="stat-hot">--</div>
+      <div class="stat-sub" id="stat-hot-sub">Call them now</div>
+    </div>
+  </div>
+
+  <!-- FEED + HOURLY -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">&#128172; Live message feed</div>
+      <div id="feed-list"><div style="font-size:12px;color:#888780;text-align:center;padding:1rem;">Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title">&#128202; Hourly volume</div>
+      <div id="hourly-bars" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+
+  <!-- MIX + RESPONSE + WEEKLY -->
+  <div class="grid-3">
+    <div class="card">
+      <div class="section-title">&#128101; Lead quality mix</div>
+      <div id="lead-mix"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">&#9200; Avg response time</div>
+      <div style="font-size:32px;font-weight:600;color:#1D9E75;margin:8px 0 2px;" id="resp-time">--</div>
+      <div style="font-size:11px;color:#888780;">vs. 4–8 hrs manual response</div>
+      <div style="font-size:11px;color:#888780;margin-top:4px;" id="resp-label">loading...</div>
+    </div>
+    <div class="card">
+      <div class="section-title">&#128200; This week</div>
+      <div id="weekly-stats"></div>
+    </div>
+  </div>
+
+  <!-- FLAGGED -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="section-title" style="justify-content:space-between;">
+      <span>&#128681; Flagged — needs your attention</span>
+      <span id="flag-count" style="font-size:11px;color:#888780;font-weight:400;"></span>
+    </div>
+    <div id="flag-list"></div>
+  </div>
+
+  <div class="footer">
+    Air Con Repair PH &nbsp;·&nbsp; Powered by Claude AI + Make.com &nbsp;·&nbsp; Dashboard built by your AI Automation Consultant
+  </div>
+</div>
+
+<script>
+const names=['Maria S.','Juan D.','Ana R.','Pedro L.','Rose T.','Carlo M.','Jenny B.','Mark V.','Luz G.','Ryan P.','Cathy A.','Ben F.','Grace O.','Leo N.'];
+const msgs=[
+  'Magkano po ang repair ng split type?',
+  'May serbisyo po ba kayo sa Quezon City?',
+  'Hindi nagmamalamig ang aircon ko',
+  'Kailan po kayo available this Saturday?',
+  'Paano po mag-book ng appointment?',
+  'Yung window type ko nag-leak ng tubig',
+  'May warranty po ba ang repair?',
+  'Ilan po ang bayad para sa cleaning?',
+  'Puwede po ba same day service?',
+  'Hindi na bumubukas yung remote',
+  'Gusto ko po ng preventive maintenance',
+  'Anong areas po ang covered ninyo?',
+  'Meron po bang installment payment?',
+  'Ilang oras po ang repair usually?'
+];
+const flagReasons=[
+  'Asked about installment payment — needs owner decision',
+  'Complaint about previous service — needs personal response',
+  'Requesting quote for 5 units (commercial) — needs owner quote'
+];
+
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function timeAgo(m){
+  if(m<1)return'just now';
+  if(m<60)return m+'m ago';
+  return Math.floor(m/60)+'h '+Math.floor(m%60)+'m ago';
+}
+
+function getData(){
+  // ── GOOGLE SHEETS INTEGRATION POINT ──────────────────────────────
+  // Replace this function with a real fetch to your Google Sheet:
+  //
+  // const SHEET_ID = 'your-sheet-id-here';
+  // const API_KEY  = 'your-api-key-here';
+  // const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`;
+  // const res  = await fetch(url);
+  // const data = await res.json();
+  // return data.values; // parse rows as needed
+  //
+  // For now, returns randomised demo data:
+  const today=rnd(28,54);
+  const auto=Math.round(today*0.78);
+  return {
+    today, auto,
+    flag:today-auto,
+    hot:rnd(3,8),
+    respSecs:rnd(8,22),
+    weekTotal:rnd(80,140),
+    weekBooked:rnd(18,35),
+    weekCompleted:rnd(12,25)
+  };
+}
+
+function buildStats(d){
+  document.getElementById('stat-today').textContent=d.today;
+  document.getElementById('stat-today-sub').textContent='+'+rnd(2,6)+' in last hour';
+  document.getElementById('stat-auto').textContent=d.auto;
+  document.getElementById('stat-auto-sub').textContent=Math.round(d.auto/d.today*100)+'% handled by Claude';
+  document.getElementById('stat-flag').textContent=d.flag;
+  document.getElementById('stat-flag-sub').textContent='Need your reply';
+  document.getElementById('stat-hot').textContent=d.hot;
+  document.getElementById('resp-time').textContent=d.respSecs+'s';
+  document.getElementById('resp-label').textContent='Week avg: '+rnd(10,25)+'s';
+}
+
+function buildFeed(){
+  const count=rnd(7,10);
+  let html='';
+  for(let i=0;i<count;i++){
+    const name=names[rnd(0,names.length-1)];
+    const msg=msgs[rnd(0,msgs.length-1)];
+    const flagged=Math.random()<0.22;
+    const qual=['hot','warm','cold'][rnd(0,2)];
+    const ago=rnd(0,58);
+    html+=`<div class="row-item">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:12px;">${name} <span class="badge badge-${qual}">${qual}</span></div>
+        <div style="font-size:11px;color:#888780;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;">${msg}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:10px;">
+        <span class="badge ${flagged?'badge-flag':'badge-ok'}">${flagged?'Flagged':'Auto-replied'}</span>
+        <div style="font-size:10px;color:#888780;margin-top:2px;">${timeAgo(ago)}</div>
+      </div>
+    </div>`;
+  }
+  document.getElementById('feed-list').innerHTML=html;
+}
+
+function buildHourly(){
+  const now=new Date().getHours();
+  const startH=Math.max(0,now-6);
+  let html='';
+  const maxV=20;
+  for(let h=startH;h<=now;h++){
+    const v=h===now?rnd(2,9):rnd(5,maxV);
+    const pct=Math.round(v/maxV*100);
+    const lbl=h<12?h+'am':h===12?'12pm':(h-12)+'pm';
+    const col=h===now?'#185FA5':'#B5D4F4';
+    html+=`<div style="display:flex;align-items:center;gap:8px;">
+      <div style="font-size:10px;color:#888780;width:32px;text-align:right;">${lbl}</div>
+      <div class="bar-bg" style="flex:1;"><div class="bar-fill" style="width:${pct}%;background:${col};"></div></div>
+      <div style="font-size:10px;color:#888780;width:18px;">${v}</div>
+    </div>`;
+  }
+  document.getElementById('hourly-bars').innerHTML=html;
+}
+
+function buildLeadMix(){
+  const hot=rnd(3,7),warm=rnd(5,10),cold=rnd(4,9);
+  const total=hot+warm+cold;
+  const hp=Math.round(hot/total*100),wp=Math.round(warm/total*100),cp=Math.round(cold/total*100);
+  document.getElementById('lead-mix').innerHTML=`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;"><span><span class="badge badge-hot">Hot</span></span><span style="color:#888780;">${hot} leads (${hp}%)</span></div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${hp}%;background:#D85A30;"></div></div>
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;"><span><span class="badge badge-warm">Warm</span></span><span style="color:#888780;">${warm} leads (${wp}%)</span></div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${wp}%;background:#EF9F27;"></div></div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;"><span><span class="badge badge-cold">Cold</span></span><span style="color:#888780;">${cold} leads (${cp}%)</span></div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${cp}%;background:#378ADD;"></div></div>
+    </div>`;
+}
+
+function buildWeekly(){
+  const total=rnd(80,140),booked=rnd(18,35),completed=rnd(12,25);
+  document.getElementById('weekly-stats').innerHTML=`
+    <div class="row-item"><span style="color:#888780;font-size:12px;">Total inquiries</span><span style="font-weight:600;">${total}</span></div>
+    <div class="row-item"><span style="color:#888780;font-size:12px;">Appointments booked</span><span style="font-weight:600;color:#0F6E56;">${booked}</span></div>
+    <div class="row-item"><span style="color:#888780;font-size:12px;">Jobs completed</span><span style="font-weight:600;color:#185FA5;">${completed}</span></div>
+    <div class="row-item" style="border:none;"><span style="color:#888780;font-size:12px;">Conversion rate</span><span style="font-weight:600;color:#534AB7;">${Math.round(completed/total*100)}%</span></div>`;
+}
+
+function buildFlags(){
+  const count=rnd(1,3);
+  document.getElementById('flag-count').textContent=count+' item'+(count>1?'s':'')+' waiting';
+  let html='';
+  for(let i=0;i<Math.min(count,flagReasons.length);i++){
+    const name=names[rnd(0,names.length-1)];
+    const ago=rnd(5,50);
+    html+=`<div class="row-item">
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:600;">${name} <span style="font-size:10px;color:#888780;font-weight:400;">${timeAgo(ago)}</span></div>
+        <div class="flag-reason">${flagReasons[i]}</div>
+      </div>
+      <button class="reply-btn" onclick="alert('In production this opens Messenger to reply to ${name}')">Reply in Messenger</button>
+    </div>`;
+  }
+  document.getElementById('flag-list').innerHTML=html||'<div style="font-size:12px;color:#888780;text-align:center;padding:0.75rem;">No flagged items right now</div>';
+}
+
+function updateTime(){
+  const n=new Date();
+  document.getElementById('last-update').textContent='Updated '+n.toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function refreshDash(){
+  const d=getData();
+  buildStats(d);
+  buildFeed();
+  buildHourly();
+  buildLeadMix();
+  buildWeekly();
+  buildFlags();
+  updateTime();
+}
+
+refreshDash();
+setInterval(refreshDash,60000);
+</script>
+</body>
+</html>
