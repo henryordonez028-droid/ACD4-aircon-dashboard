@@ -79,7 +79,7 @@
       <div class="stat-sub" id="stat-today-sub">loading...</div>
     </div>
     <div class="card">
-      <div class="stat-label">Auto-replied by Claude</div>
+      <div class="stat-label">Auto-replied</div>
       <div class="stat-val stat-blue" id="stat-auto">--</div>
       <div class="stat-sub" id="stat-auto-sub">loading...</div>
     </div>
@@ -199,7 +199,7 @@ function buildStats(d){
   document.getElementById('stat-today').textContent=d.today;
   document.getElementById('stat-today-sub').textContent='+'+rnd(2,6)+' in last hour';
   document.getElementById('stat-auto').textContent=d.auto;
-  document.getElementById('stat-auto-sub').textContent=Math.round(d.auto/d.today*100)+'% handled by Claude';
+  document.getElementById('stat-auto-sub').textContent=Math.round(d.auto/d.today*100)+'% auto-handled';
   document.getElementById('stat-flag').textContent=d.flag;
   document.getElementById('stat-flag-sub').textContent='Need your reply';
   document.getElementById('stat-hot').textContent=d.hot;
